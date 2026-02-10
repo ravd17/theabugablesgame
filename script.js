@@ -28,7 +28,7 @@ const CONFIG = {
     // TEXT CONTENT - Change all the words/messages here!
     TEXT: {
         // Game Title
-        gameTitle: 'GEM RUSH',
+        gameTitle: 'The Abugables',
         
         // Level Display
         levelLabel: 'LEVEL',

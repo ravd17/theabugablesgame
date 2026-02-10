@@ -55,9 +55,9 @@ const CONFIG = {
         outOfMovesMessage: 'Try again.',
         
         // Congratulations Modal (Final Level)
-        congratsTitle: 'Victory!',
-        congratsSubtitle: 'All Levels Completed!',
-        congratsMessage: "You're a Gem Master! 💎",
+        congratsTitle: 'Panalo yarn?',
+        congratsSubtitle: 'Galing mo!!',
+        congratsMessage: "I hope that me creating this simple game makes you happy. Please go to your gmail account for something sweet!",
         finalScoreLabel: 'Final Score:',
         playAgainButton: 'Play Again',
         

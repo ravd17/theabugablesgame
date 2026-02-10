@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gem Rush - Match 3 Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* ============================================
+           CUSTOMIZATION CONFIGURATION - CHANGE THESE!
+           ============================================ */
+        
+        /* Import your fonts here */
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap');
+        
+        /* CSS Variables for easy customization */
+        :root {
+            /* Background Gradient - Change these colors */
+            --bg-color-1: #667eea;
+            --bg-color-2: #764ba2;
+            
+            /* Main Title Colors */
+            --title-color: #ffffff;
+            --title-shadow: rgba(0, 0, 0, 0.3);
+            
+            /* Accent Colors */
+            --accent-yellow: #fde047;
+            --accent-pink: #f9a8d4;
+            --accent-green: #86efac;
+            
+            /* Glass Panel */
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            
+            /* Progress Bar Gradient */
+            --progress-start: #4ade80;
+            --progress-end: #10b981;
+            
+            /* Font Families */
+            --font-main: 'Nunito', sans-serif;
+            --font-title: 'Fredoka One', cursive;
+            
+            /* Gem Selection Glow */
+            --gem-glow: #ffffff;
+        }
+
+        /* ============================================
+           BASE STYLES - Don't change below unless you know CSS
+           ============================================ */
+        
+        body {
+            font-family: var(--font-main);
+            background: linear-gradient(135deg, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .title-font {
+            font-family: var(--font-title);
+        }
+
+        .gem {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .gem:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .gem.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 4px var(--gem-glow), 0 0 20px rgba(255, 255, 255, 0.5);
+            z-index: 10;
+        }
+
+        .gem.matched {
+            animation: matchPop 0.5s ease-out forwards;
+        }
+
+        .gem.falling {
+            animation: fall 0.5s ease-in;
+        }
+
+        @keyframes matchPop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        @keyframes fall {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease-out;
+            background: linear-gradient(to right, var(--progress-start), var(--progress-end)) !important;
+        }
+
+        /* Custom text colors using CSS variables */
+        .text-custom-yellow { color: var(--accent-yellow); }
+        .text-custom-pink { color: var(--accent-pink); }
+        .text-custom-green { color: var(--accent-green); }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- Header -->
+        <div class="glass-panel rounded-2xl p-6 mb-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-white">
+                    <p class="text-sm opacity-80 font-semibold uppercase tracking-wider">LEVEL</p>
+                    <p class="text-3xl title-font text-custom-yellow drop-shadow-lg" id="level-display">1</p>
+                </div>
+                <div class="text-center">
+                    <h1 class="text-2xl title-font text-white tracking-wider drop-shadow-lg">GEM RUSH</h1>
+                    <div class="flex gap-1 justify-center mt-1">
+                        <i data-lucide="star" class="w-4 h-4 text-yellow-300 fill-yellow-300"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-yellow-300 fill-yellow-300"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-yellow-300 fill-yellow-300"></i>
+                    </div>
+                </div>
+                <div class="text-white text-right">
+                    <p class="text-sm opacity-80 font-semibold uppercase tracking-wider">MOVES</p>
+                    <p class="text-3xl title-font text-custom-pink drop-shadow-lg" id="moves-display">20</p>
+                </div>
+            </div>
+
+            <!-- Score Progress -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-white text-sm font-bold uppercase tracking-wider">
+                    <span>Score: <span id="score-display" class="text-custom-green drop-shadow">0</span></span>
+                    <span>Target: <span id="target-display" class="drop-shadow">500</span></span>
+                </div>
+                <div class="w-full bg-black/20 rounded-full h-3 overflow-hidden shadow-inner">
+                    <div id="progress-bar" class="progress-bar h-full rounded-full shadow-lg" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Grid -->
+        <div class="glass-panel rounded-2xl p-4 shadow-2xl relative">
+            <div id="game-grid" class="grid grid-cols-8 gap-2 aspect-square">
+                <!-- Grid cells generated by JS -->
+            </div>
+            
+            <!-- Level Start Overlay -->
+            <div id="level-overlay" class="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                <div class="text-center text-white p-6">
+                    <h2 class="text-4xl title-font mb-2 text-yellow-300">Level <span id="overlay-level">1</span></h2>
+                    <p class="text-lg mb-4">Target: <span id="overlay-target">500</span> points</p>
+                    <p class="text-sm opacity-80 mb-6">Match 3 or more gems to score!</p>
+                    <button onclick="startLevel()" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-full transform transition hover:scale-105 shadow-lg">
+                        Start Level
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-4 text-center text-white/80 text-sm">
+            <p>Click a gem, then click an adjacent gem to swap</p>
+        </div>
+    </div>
+
+    <!-- Congratulations Modal -->
+    <div id="congrats-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="bg-gradient-to-br from-purple-600 to-blue-600 p-8 rounded-3xl shadow-2xl max-w-md w-full mx-4 text-center relative overflow-hidden border-4 border-yellow-400" id="congrats-card">
+            <!-- Background sparkle effect -->
+            <div class="absolute inset-0 opacity-20">
+                <div class="absolute top-10 left-10 w-20 h-20 bg-white rounded-full blur-xl animate-pulse"></div>
+                <div class="absolute bottom-10 right-10 w-32 h-32 bg-yellow-300 rounded-full blur-xl animate-pulse" style="animation-delay: 0.5s"></div>
+                <div class="absolute top-1/2 left-1/2 w-24 h-24 bg-pink-400 rounded-full blur-xl animate-pulse" style="animation-delay: 1s"></div>
+            </div>
+
+            <div class="relative z-10">
+                <div class="mb-6">
+                    <i data-lucide="trophy" class="w-20 h-20 text-yellow-400 mx-auto animate-bounce"></i>
+                </div>
+                
+                <h2 class="text-5xl title-font text-white mb-2 drop-shadow-lg" id="congrats-title">Victory!</h2>
+                <p class="text-2xl text-yellow-300 font-bold mb-4 drop-shadow-md" id="congrats-subtitle">All Levels Completed!</p>
+                
+                <div class="bg-white/20 rounded-xl p-4 mb-6 backdrop-blur-sm border border-white/30">
+                    <p class="text-white text-lg mb-2"><span id="final-score-label">Final Score:</span> <span id="final-score" class="font-bold text-yellow-300 text-2xl drop-shadow">0</span></p>
+                    <p class="text-white/90 text-sm font-semibold" id="congrats-message">You're a Gem Master! 💎</p>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="restartGame()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-2xl transform transition hover:scale-105 shadow-xl flex items-center justify-center gap-2" id="play-again-btn">
+                        <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        Play Again
+                    </button>
+                </div>
+
+                <div class="mt-6 flex justify-center gap-2 text-4xl" id="victory-emojis">
+                    <span>🎉</span>
+                    <span>🏆</span>
+                    <span>🎊</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="level-complete-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-40 hidden">
+        <div class="bg-gradient-to-br from-white to-gray-100 p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 text-center border-4 border-green-400">
+            <div class="mb-4">
+                <i data-lucide="check-circle" class="w-16 h-16 text-green-500 mx-auto animate-bounce"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2 font-title">Level Complete!</h3>
+            <p class="text-gray-600 mb-6 text-lg">Great job! Ready for the next challenge?</p>
+            <button onclick="nextLevel()" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-8 rounded-full hover:scale-105 transition transform shadow-lg">
+                Next Level →
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

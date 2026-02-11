@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_self">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate's Treasure Hunt</title>
+    <meta name="description" content="Embark on a pirate adventure! Complete three challenges to find the treasure map and claim your prize.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Seaweed+Script&family=IM+Fell+English&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pirate-purple': {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                        'pirate-gold': '#fbbf24',
+                        'pirate-brown': '#78350f',
+                        'pirate-blue': '#1e40af',
+                    },
+                    fontFamily: {
+                        'pirata': ['Pirata One', 'cursive'],
+                        'seaweed': ['Seaweed Script', 'cursive'],
+                        'fell': ['IM Fell English', 'serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s ease-in-out infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'chest-open': 'chestOpen 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        chestOpen: {
+                            '0%': { transform: 'rotateX(0deg)' },
+                            '100%': { transform: 'rotateX(-45deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .game-cell {
+            transition: all 0.3s ease;
+        }
+        .game-cell:hover {
+            transform: scale(1.05);
+        }
+        .candy {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .candy:hover {
+            transform: scale(1.1);
+        }
+        .wordle-letter {
+            transition: all 0.3s ease;
+        }
+        .treasure-chest {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .chest-lid {
+            transform-origin: top center;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-pirate-purple-900 via-pirate-purple-800 to-pirate-purple-900 text-white font-fell">
+    <!-- Header -->
+    <header class="bg-pirate-purple-800/80 backdrop-blur-sm border-b-4 border-pirate-gold sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-pirata text-pirate-gold mb-2">Pirate's Treasure Hunt</h1>
+                    <p class="text-lg font-seaweed text-pirate-purple-200">Find the map, claim the treasure!</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="bg-pirate-purple-900/50 p-3 rounded-lg border-2 border-pirate-gold">
+                        <p class="text-sm">Current Stage: <span id="current-stage" class="font-bold text-pirate-gold">1</span>/3</p>
+                        <p class="text-sm">Maps Found: <span id="maps-found" class="font-bold text-pirate-gold">0</span>/3</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Game Progress -->
+        <div class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-pirata text-pirate-gold">Your Quest</h2>
+                <button id="reset-game" class="bg-pirate-brown hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg border-2 border-pirate-gold transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Reset Adventure
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Stage 1 -->
+                <div class="bg-pirate-purple-700/50 p-6 rounded-xl border-4 border-pirate-purple-600">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-pirate-gold flex items-center justify-center mr-3">
+                            <span class="text-xl font-bold text-pirate-purple-900">1</span>
+                        </div>
+                        <h3 class="text-2xl font-pirata text-pirate-gold">Tic Tac Toe</h3>
+                    </div>
+                    <p class="mb-4">Defeat the AI pirate in Tic Tac Toe to get the first map piece.</p>
+                    <div class="mb-4">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">Status:</span>
+                            <span id="stage1-status" class="px-3 py-1 rounded-full bg-pirate-purple-600 text-sm">Not Started</span>
+                        </div>
+                    </div>
+                    <button id="start-stage1" class="w-full bg-pirate-gold hover:bg-yellow-500 text-pirate-purple-900 font-bold py-2 px-4 rounded-lg transition-colors">
+                        Start Challenge
+                    </button>
+                </div>
+
+                <!-- Stage 2 -->
+                <div class="bg-pirate-purple-700/50 p-6 rounded-xl border-4 border-pirate-purple-600 opacity-70">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-pirate-purple-600 flex items-center justify-center mr-3">
+                            <span class="text-xl font-bold text-pirate-purple-200">2</span>
+                        </div>
+                        <h3 class="text-2xl font-pirata text-pirate-purple-300">Candy Crush</h3>
+                    </div>
+                    <p class="mb-4">Score 500 points in 30 moves to get the second map piece.</p>
+                    <div class="mb-4">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">Status:</span>
+                            <span id="stage2-status" class="px-3 py-1 rounded-full bg-pirate-purple-600 text-sm">Locked</span>
+                        </div>
+                    </div>
+                    <button id="start-stage2" class="w-full bg-pirate-purple-600 text-pirate-purple-200 font-bold py-2 px-4 rounded-lg cursor-not-allowed" disabled>
+                        Complete Stage 1 First
+                    </button>
+                </div>
+
+                <!-- Stage 3 -->
+                <div class="bg-pirate-purple-700/50 p-6 rounded-xl border-4 border-pirate-purple-600 opacity-70">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-pirate-purple-600 flex items-center justify-center mr-3">
+                            <span class="text-xl font-bold text-pirate-purple-200">3</span>
+                        </div>
+                        <h3 class="text-2xl font-pirata text-pirate-purple-300">Word Puzzle</h3>
+                    </div>
+                    <p class="mb-4">Guess the secret word to get the final map piece.</p>
+                    <div class="mb-4">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">Status:</span>
+                            <span id="stage3-status" class="px-3 py-1 rounded-full bg-pirate-purple-600 text-sm">Locked</span>
+                        </div>
+                    </div>
+                    <button id="start-stage3" class="w-full bg-pirate-purple-600 text-pirate-purple-200 font-bold py-2 px-4 rounded-lg cursor-not-allowed" disabled>
+                        Complete Stage 2 First
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="bg-pirate-purple-800/40 backdrop-blur-sm rounded-2xl border-4 border-pirate-gold p-6 mb-8">
+            <div id="game-container">
+                <!-- Game content will be loaded here -->
+                <div class="text-center py-12">
+                    <div class="animate-float inline-block mb-6">
+                        <i class="fas fa-map-marked-alt text-6xl text-pirate-gold"></i>
+                    </div>
+                    <h3 class="text-3xl font-pirata text-pirate-gold mb-4">Welcome, Pirate!</h3>
+                    <p class="text-xl mb-6">Start your adventure by clicking on Stage 1 above.</p>
+                    <p class="text-pirate-purple-200">Complete all three challenges to find the treasure map!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Treasure Chest (Hidden until all stages complete) -->
+        <div id="treasure-section" class="hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-pirata text-pirate-gold mb-4">You Found the Treasure Map!</h2>
+                <p class="text-xl mb-6">Click on the treasure chest to claim your prize!</p>
+            </div>
+            
+            <div class="flex justify-center">
+                <div class="treasure-chest relative cursor-pointer" id="treasure-chest">
+                    <div class="chest-lid bg-pirate-brown w-64 h-16 rounded-t-lg border-4 border-pirate-gold"></div>
+                    <div class="chest-body bg-pirate-brown w-64 h-32 rounded-b-lg border-4 border-pirate-gold border-t-0 relative">
+                        <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                            <div class="w-12 h-12 rounded-full bg-pirate-gold flex items-center justify-center">
+                                <i class="fas fa-lock text-pirate-brown"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                        <i class="fas fa-star text-pirate-gold text-4xl animate-pulse"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prize Message (Hidden until chest is clicked) -->
+        <div id="prize-message" class="hidden mt-12">
+            <div class="bg-gradient-to-r from-pirate-gold to-yellow-500 p-1 rounded-2xl">
+                <div class="bg-pirate-purple-900 rounded-xl p-8 text-center">
+                    <div class="mb-6">
+                        <i class="fas fa-gem text-6xl text-pirate-gold mb-4"></i>
+                        <h3 class="text-4xl font-pirata text-pirate-gold mb-4">Congratulations!</h3>
+                        <p class="text-2xl mb-4">You've successfully completed the pirate's treasure hunt!</p>
+                    </div>
+                    <div class="bg-pirate-purple-800/50 p-6 rounded-lg border-2 border-pirate-gold">
+                        <p class="text-xl" id="prize-text">Your prize message will appear here!</p>
+                        <div class="mt-6">
+                            <button id="customize-prize" class="bg-pirate-gold hover:bg-yellow-500 text-pirate-purple-900 font-bold py-3 px-6 rounded-lg text-lg transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Customize Your Prize Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-pirate-purple-900/80 border-t-4 border-pirate-gold mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="text-center">
+                <p class="text-lg font-seaweed text-pirate-purple-200 mb-4">"Dead men tell no tales, but treasure hunters find all!"</p>
+                <p class="text-pirate-purple-300">© 2024 Pirate's Treasure Hunt. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Prize Modal -->
+    <div id="prize-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-pirate-purple-800 rounded-2xl border-4 border-pirate-gold p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-pirata text-pirate-gold mb-4">Create Your Prize Message</h3>
+            <div class="mb-6">
+                <label class="block text-pirate-purple-200 mb-2">Enter your custom prize message:</label>
+                <textarea id="custom-prize-input" class="w-full h-32 bg-pirate-purple-900 border-2 border-pirate-purple-600 rounded-lg p-3 text-white focus:outline-none focus:border-pirate-gold" placeholder="Enter your special prize message here..."></textarea>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-prize" class="bg-pirate-purple-600 hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button id="save-prize" class="bg-pirate-gold hover:bg-yellow-500 text-pirate-purple-900 font-bold px-4 py-2 rounded-lg transition-colors">
+                    Save Prize
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentStage: 0,
+            completedStages: [],
+            mapsFound: 0,
+            stage1Completed: false,
+            stage2Completed: false,
+            stage3Completed: false,
+            prizeMessage: "Congratulations! You've proven yourself a true pirate! Your treasure is the journey itself and the skills you've gained. Remember: The real treasure was the friends we made along the way! 🏴‍☠️"
+        };
+
+        // Game Data
+        const games = {
+            stage1: {
+                board: Array(9).fill(''),
+                currentPlayer: 'X',
+                gameActive: false,
+                aiPlayer: 'O',
+                playerSymbol: 'X'
+            },
+            stage2: {
+                board: [],
+                score: 0,
+                moves: 30,
+                targetScore: 500,
+                gameActive: false,
+                candies: ['🍬', '🍭', '🍫', '🍩', '🍪', '🧁']
+            },
+            stage3: {
+                targetWord: "HAPPY",
+                currentGuess: '',
+                guesses: [],
+                maxGuesses: 6,
+                gameActive: false
+            }
+        };
+
+        // DOM Elements
+        const elements = {
+            currentStage: document.getElementById('current-stage'),
+            mapsFound: document.getElementById('maps-found'),
+            stage1Status: document.getElementById('stage1-status'),
+            stage2Status: document.getElementById('stage2-status'),
+            stage3Status: document.getElementById('stage3-status'),
+            startStage1: document.getElementById('start-stage1'),
+            startStage2: document.getElementById('start-stage2'),
+            startStage3: document.getElementById('start-stage3'),
+            gameContainer: document.getElementById('game-container'),
+            treasureSection: document.getElementById('treasure-section'),
+            treasureChest: document.getElementById('treasure-chest'),
+            prizeMessage: document.getElementById('prize-message'),
+            prizeText: document.getElementById('prize-text'),
+            customizePrize: document.getElementById('customize-prize'),
+            prizeModal: document.getElementById('prize-modal'),
+            customPrizeInput: document.getElementById('custom-prize-input'),
+            cancelPrize: document.getElementById('cancel-prize'),
+            savePrize: document.getElementById('save-prize'),
+            resetGame: document.getElementById('reset-game')
+        };
+
+        // Initialize Game
+        function initGame() {
+            updateUI();
+            setupEventListeners();
+        }
+
+        // Update UI based on game state
+        function updateUI() {
+            elements.currentStage.textContent = gameState.currentStage || '0';
+            elements.mapsFound.textContent = gameState.mapsFound;
+            
+            // Update stage statuses
+            elements.stage1Status.textContent = gameState.stage1Completed ? 'Completed ✓' : 'Not Started';
+            elements.stage1Status.className = `px-3 py-1 rounded-full text-sm ${gameState.stage1Completed ? 'bg-green-600' : 'bg-pirate-purple-600'}`;
+            
+            elements.stage2Status.textContent = gameState.stage1Completed ? (gameState.stage2Completed ? 'Completed ✓' : 'Available') : 'Locked';
+            elements.stage2Status.className = `px-3 py-1 rounded-full text-sm ${gameState.stage2Completed ? 'bg-green-600' : gameState.stage1Completed ? 'bg-pirate-purple-600' : 'bg-gray-600'}`;
+            
+            elements.stage3Status.textContent = gameState.stage2Completed ? (gameState.stage3Completed ? 'Completed ✓' : 'Available') : 'Locked';
+            elements.stage3Status.className = `px-3 py-1 rounded-full text-sm ${gameState.stage3Completed ? 'bg-green-600' : gameState.stage2Completed ? 'bg-pirate-purple-600' : 'bg-gray-600'}`;
+
+            // Update stage buttons
+            elements.startStage1.disabled = gameState.stage1Completed;
+            elements.startStage1.textContent = gameState.stage1Completed ? 'Completed ✓' : 'Start Challenge';
+            elements.startStage1.className = `w-full ${gameState.stage1Completed ? 'bg-green-600 hover:bg-green-700' : 'bg-pirate-gold hover:bg-yellow-500'} text-pirate-purple-900 font-bold py-2 px-4 rounded-lg transition-colors`;
+
+            elements.startStage2.disabled = !gameState.stage1Completed || gameState.stage2Completed;
+            elements.startStage2.textContent = gameState.stage2Completed ? 'Completed ✓' : (gameState.stage1Completed ? 'Start Challenge' : 'Complete Stage 1 First');
+            elements.startStage2.className = `w-full ${gameState.stage2Completed ? 'bg-green-600 hover:bg-green-700' : gameState.stage1Completed ? 'bg-pirate-gold hover:bg-yellow-500' : 'bg-pirate-purple-600'} ${gameState.stage1Completed ? 'text-pirate-purple-900' : 'text-pirate-purple-200'} font-bold py-2 px-4 rounded-lg transition-colors`;
+
+            elements.startStage3.disabled = !gameState.stage2Completed || gameState.stage3Completed;
+            elements.startStage3.textContent = gameState.stage3Completed ? 'Completed ✓' : (gameState.stage2Completed ? 'Start Challenge' : 'Complete Stage 2 First');
+            elements.startStage3.className = `w-full ${gameState.stage3Completed ? 'bg-green-600 hover:bg-green-700' : gameState.stage2Completed ? 'bg-pirate-gold hover:bg-yellow-500' : 'bg-pirate-purple-600'} ${gameState.stage2Completed ? 'text-pirate-purple-900' : 'text-pirate-purple-200'} font-bold py-2 px-4 rounded-lg transition-colors`;
+
+            // Show treasure section if all stages completed
+            if (gameState.stage1Completed && gameState.stage2Completed && gameState.stage3Completed) {
+                elements.treasureSection.classList.remove('hidden');
+            }
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            elements.startStage1.addEventListener('click', () => startStage1());
+            elements.startStage2.addEventListener('click', () => startStage2());
+            elements.startStage3.addEventListener('click', () => startStage3());
+            elements.treasureChest.addEventListener('click', openTreasureChest);
+            elements.customizePrize.addEventListener('click', showPrizeModal);
+            elements.cancelPrize.addEventListener('click', hidePrizeModal);
+            elements.savePrize.addEventListener('click', savePrizeMessage);
+            elements.resetGame.addEventListener('click', resetGame);
+        }
+
+        // Stage 1: Tic Tac Toe
+        function startStage1() {
+            if (gameState.stage1Completed) return;
+            
+            gameState.currentStage = 1;
+            updateUI();
+            
+            const gameHTML = `
+                <div class="text-center">
+                    <h3 class="text-3xl font-pirata text-pirate-gold mb-2">Stage 1: Tic Tac Toe Challenge</h3>
+                    <p class="text-xl mb-6">Defeat the AI pirate! You are X, AI is O. Win once to get the map piece.</p>
+                    
+                    <div class="mb-6">
+                        <div class="inline-block bg-pirate-purple-700 p-4 rounded-lg">
+                            <div class="grid grid-cols-3 gap-2 mb-4" id="tic-tac-toe-board">
+                                ${Array(9).fill().map((_, i) => `
+                                    <div class="game-cell w-20 h-20 bg-pirate-purple-600 border-2 border-pirate-gold rounded-lg flex items-center justify-center text-4xl cursor-pointer hover:bg-pirate-purple-500" data-index="${i}"></div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p class="text-lg mb-2">Status: <span id="game-status" class="font-bold">Your turn (X)</span></p>
+                        <p class="text-sm text-pirate-purple-200">Click on any empty cell to make your move</p>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="restart-stage1" class="bg-pirate-purple-600 hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Restart Game
+                        </button>
+                        <button id="back-to-menu" class="bg-pirate-brown hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Back to Menu
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            elements.gameContainer.innerHTML = gameHTML;
+            
+            // Initialize Tic Tac Toe
+            games.stage1.board = Array(9).fill('');
+            games.stage1.currentPlayer = 'X';
+            games.stage1.gameActive = true;
+            
+            const boardCells = document.querySelectorAll('#tic-tac-toe-board .game-cell');
+            const gameStatus = document.getElementById('game-status');
+            const restartBtn = document.getElementById('restart-stage1');
+            const backBtn = document.getElementById('back-to-menu');
+            
+            boardCells.forEach(cell => {
+                cell.addEventListener('click', handleTicTacToeClick);
+            });
+            
+            restartBtn.addEventListener('click', startStage1);
+            backBtn.addEventListener('click', showMainMenu);
+        }
+
+        function handleTicTacToeClick(e) {
+            if (!games.stage1.gameActive) return;
+            
+            const index = parseInt(e.target.dataset.index);
+            
+            if (games.stage1.board[index] !== '') return;
+            
+            // Player move
+            games.stage1.board[index] = games.stage1.playerSymbol;
+            e.target.textContent = games.stage1.playerSymbol;
+            e.target.classList.add('text-pirate-gold');
+            
+            if (checkTicTacToeWin(games.stage1.board, games.stage1.playerSymbol)) {
+                games.stage1.gameActive = false;
+                document.getElementById('game-status').textContent = 'You Win! Map piece found!';
+                completeStage(1);
+                return;
+            }
+            
+            if (isBoardFull(games.stage1.board)) {
+                games.stage1.gameActive = false;
+                document.getElementById('game-status').textContent = "It's a draw! Try again.";
+                return;
+            }
+            
+            // AI move
+            setTimeout(makeAIMove, 500);
+        }
+
+        function makeAIMove() {
+            if (!games.stage1.gameActive) return;
+            
+            const emptyCells = games.stage1.board
+                .map((cell, index) => cell === '' ? index : null)
+                .filter(index => index !== null);
+            
+            if (emptyCells.length === 0) return;
+            
+            // Simple AI: random move
+            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            games.stage1.board[randomIndex] = games.stage1.aiPlayer;
+            
+            const cell = document.querySelector(`#tic-tac-toe-board .game-cell[data-index="${randomIndex}"]`);
+            cell.textContent = games.stage1.aiPlayer;
+            cell.classList.add('text-white');
+            
+            if (checkTicTacToeWin(games.stage1.board, games.stage1.aiPlayer)) {
+                games.stage1.gameActive = false;
+                document.getElementById('game-status').textContent = 'AI Wins! Try again.';
+                return;
+            }
+            
+            if (isBoardFull(games.stage1.board)) {
+                games.stage1.gameActive = false;
+                document.getElementById('game-status').textContent = "It's a draw! Try again.";
+            }
+        }
+
+        function checkTicTacToeWin(board, player) {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6] // Diagonals
+            ];
+            
+            return winPatterns.some(pattern => 
+                pattern.every(index => board[index] === player)
+            );
+        }
+
+        function isBoardFull(board) {
+            return board.every(cell => cell !== '');
+        }
+
+        // Stage 2: Candy Crush-like Game
+        function startStage2() {
+            if (!gameState.stage1Completed || gameState.stage2Completed) return;
+            
+            gameState.currentStage = 2;
+            updateUI();
+            
+            const gameHTML = `
+                <div class="text-center">
+                    <h3 class="text-3xl font-pirata text-pirate-gold mb-2">Stage 2: Candy Match Challenge</h3>
+                    <p class="text-xl mb-6">Score 500 points in 30 moves to get the second map piece.</p>
+                    
+                    <div class="mb-6">
+                        <div class="flex justify-center space-x-8 mb-4">
+                            <div class="bg-pirate-purple-700 p-4 rounded-lg">
+                                <p class="text-lg">Score: <span id="current-score" class="font-bold text-pirate-gold">0</span></p>
+                            </div>
+                            <div class="bg-pirate-purple-700 p-4 rounded-lg">
+                                <p class="text-lg">Moves Left: <span id="moves-left" class="font-bold text-pirate-gold">30</span></p>
+                            </div>
+                            <div class="bg-pirate-purple-700 p-4 rounded-lg">
+                                <p class="text-lg">Target: <span class="font-bold text-pirate-gold">500</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="inline-block bg-pirate-purple-800 p-4 rounded-lg border-4 border-pirate-gold">
+                            <div class="grid grid-cols-8 gap-2" id="candy-board">
+                                ${Array(64).fill().map((_, i) => `
+                                    <div class="candy w-12 h-12 bg-pirate-purple-600 border-2 border-pirate-purple-400 rounded-lg flex items-center justify-center text-2xl" data-index="${i}"></div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p class="text-lg mb-2">How to play: Click adjacent candies to swap them. Match 3 or more to score points!</p>
+                        <p id="candy-status" class="text-sm text-pirate-purple-200">Click two adjacent candies to swap them</p>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="restart-stage2" class="bg-pirate-purple-600 hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Restart Game
+                        </button>
+                        <button id="back-to-menu-2" class="bg-pirate-brown hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Back to Menu
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            elements.gameContainer.innerHTML = gameHTML;
+            
+            // Initialize Candy Game
+            initCandyGame();
+            
+            const restartBtn = document.getElementById('restart-stage2');
+            const backBtn = document.getElementById('back-to-menu-2');
+            
+            restartBtn.addEventListener('click', startStage2);
+            backBtn.addEventListener('click', showMainMenu);
+        }
+
+        function initCandyGame() {
+            games.stage2.board = [];
+            games.stage2.score = 0;
+            games.stage2.moves = 30;
+            games.stage2.gameActive = true;
+            games.stage2.selectedCandy = null;
+            
+            // Create initial board
+            const board = document.getElementById('candy-board');
+            const candies = games.stage2.candies;
+            
+            for (let i = 0; i < 64; i++) {
+                games.stage2.board.push(candies[Math.floor(Math.random() * candies.length)]);
+            }
+            
+            updateCandyBoard();
+            updateCandyUI();
+        }
+
+        function updateCandyBoard() {
+            const board = document.getElementById('candy-board');
+            const candies = games.stage2.candies;
+            
+            games.stage2.board.forEach((candy, index) => {
+                const cell = board.children[index];
+                cell.textContent = candy;
+                cell.dataset.index = index;
+                cell.addEventListener('click', () => selectCandy(index));
+            });
+        }
+
+        function selectCandy(index) {
+            if (!games.stage2.gameActive) return;
+            
+            if (games.stage2.selectedCandy === null) {
+                games.stage2.selectedCandy = index;
+                document.querySelector(`#candy-board .candy[data-index="${index}"]`).classList.add('border-pirate-gold', 'scale-110');
+                document.getElementById('candy-status').textContent = 'Now click an adjacent candy to swap';
+            } else {
+                const firstIndex = games.stage2.selectedCandy;
+                const secondIndex = index;
+                
+                // Check if candies are adjacent
+                if (areCandiesAdjacent(firstIndex, secondIndex)) {
+                    swapCandies(firstIndex, secondIndex);
+                    games.stage2.moves--;
+                    
+                    // Check for matches
+                    const matches = findMatches();
+                    if (matches.length > 0) {
+                        const points = matches.length * 10;
+                        games.stage2.score += points;
+                        removeMatches(matches);
+                        fillEmptySpaces();
+                        
+                        if (games.stage2.score >= games.stage2.targetScore) {
+                            games.stage2.gameActive = false;
+                            document.getElementById('candy-status').textContent = 'Congratulations! You reached the target score!';
+                            completeStage(2);
+                        }
+                    } else {
+                        // Swap back if no matches
+                        swapCandies(firstIndex, secondIndex);
+                    }
+                    
+                    updateCandyUI();
+                    
+                    if (games.stage2.moves <= 0 && games.stage2.score < games.stage2.targetScore) {
+                        games.stage2.gameActive = false;
+                        document.getElementById('candy-status').textContent = 'Out of moves! Try again.';
+                    }
+                }
+                
+                // Reset selection
+                document.querySelector(`#candy-board .candy[data-index="${firstIndex}"]`).classList.remove('border-pirate-gold', 'scale-110');
+                games.stage2.selectedCandy = null;
+                document.getElementById('candy-status').textContent = 'Click two adjacent candies to swap them';
+            }
+        }
+
+        function areCandiesAdjacent(index1, index2) {
+            const row1 = Math.floor(index1 / 8);
+            const col1 = index1 % 8;
+            const row2 = Math.floor(index2 / 8);
+            const col2 = index2 % 8;
+            
+            return (Math.abs(row1 - row2) === 1 && col1 === col2) || 
+                   (Math.abs(col1 - col2) === 1 && row1 === row2);
+        }
+
+        function swapCandies(index1, index2) {
+            [games.stage2.board[index1], games.stage2.board[index2]] = 
+            [games.stage2.board[index2], games.stage2.board[index1]];
+            updateCandyBoard();
+        }
+
+        function findMatches() {
+            const matches = new Set();
+            const board = games.stage2.board;
+            
+            // Check horizontal matches
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const index = row * 8 + col;
+                    if (board[index] === board[index + 1] && board[index] === board[index + 2]) {
+                        matches.add(index);
+                        matches.add(index + 1);
+                        matches.add(index + 2);
+                    }
+                }
+            }
+            
+            // Check vertical matches
+            for (let col = 0; col < 8; col++) {
+                for (let row = 0; row < 6; row++) {
+                    const index = row * 8 + col;
+                    if (board[index] === board[index + 8] && board[index] === board[index + 16]) {
+                        matches.add(index);
+                        matches.add(index + 8);
+                        matches.add(index + 16);
+                    }
+                }
+            }
+            
+            return Array.from(matches);
+        }
+
+        function removeMatches(matches) {
+            matches.forEach(index => {
+                games.stage2.board[index] = null;
+            });
+        }
+
+        function fillEmptySpaces() {
+            const candies = games.stage2.candies;
+            
+            // Move candies down
+            for (let col = 0; col < 8; col++) {
+                let emptySpaces = 0;
+                for (let row = 7; row >= 0; row--) {
+                    const index = row * 8 + col;
+                    if (games.stage2.board[index] === null) {
+                        emptySpaces++;
+                    } else if (emptySpaces > 0) {
+                        games.stage2.board[index + emptySpaces * 8] = games.stage2.board[index];
+                        games.stage2.board[index] = null;
+                    }
+                }
+                
+                // Fill top with new candies
+                for (let row = 0; row < emptySpaces; row++) {
+                    const index = row * 8 + col;
+                    games.stage2.board[index] = candies[Math.floor(Math.random() * candies.length)];
+                }
+            }
+            
+            updateCandyBoard();
+        }
+
+        function updateCandyUI() {
+            document.getElementById('current-score').textContent = games.stage2.score;
+            document.getElementById('moves-left').textContent = games.stage2.moves;
+        }
+
+        // Stage 3: Wordle-like Game
+        function startStage3() {
+            if (!gameState.stage2Completed || gameState.stage3Completed) return;
+            
+            gameState.currentStage = 3;
+            updateUI();
+            
+            const gameHTML = `
+                <div class="text-center">
+                    <h3 class="text-3xl font-pirata text-pirate-gold mb-2">Stage 3: Word Puzzle Challenge</h3>
+                    <p class="text-xl mb-6">Guess the 5-letter word to get the final map piece. The word is "HAPPY".</p>
+                    
+                    <div class="mb-8">
+                        <div class="inline-block bg-pirate-purple-700 p-6 rounded-lg">
+                            <div id="wordle-board" class="space-y-2">
+                                ${Array(6).fill().map((_, row) => `
+                                    <div class="flex justify-center space-x-2" id="row-${row}">
+                                        ${Array(5).fill().map((_, col) => `
+                                            <div class="wordle-letter w-14 h-14 border-2 border-pirate-purple-400 rounded-lg flex items-center justify-center text-2xl font-bold uppercase" id="cell-${row}-${col}"></div>
+                                        `).join('')}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <div class="bg-pirate-purple-800 p-4 rounded-lg inline-block">
+                            <p class="text-lg mb-2">Enter your guess (5 letters):</p>
+                            <input type="text" id="wordle-input" maxlength="5" class="bg-pirate-purple-900 border-2 border-pirate-gold rounded-lg px-4 py-2 text-white text-center text-xl uppercase tracking-widest focus:outline-none focus:border-pirate-gold" autocomplete="off">
+                            <div class="mt-4">
+                                <button id="submit-guess" class="bg-pirate-gold hover:bg-yellow-500 text-pirate-purple-900 font-bold px-6 py-2 rounded-lg mr-2 transition-colors">
+                                    Submit Guess
+                                </button>
+                                <button id="restart-stage3" class="bg-pirate-purple-600 hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Restart Game
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p id="wordle-status" class="text-lg">Enter a 5-letter word and press Submit</p>
+                        <p class="text-sm text-pirate-purple-200">Guesses left: <span id="guesses-left">6</span></p>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button id="back-to-menu-3" class="bg-pirate-brown hover:bg-pirate-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Back to Menu
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            elements.gameContainer.innerHTML = gameHTML;
+            
+            // Initialize Wordle Game
+            initWordleGame();
+            
+            const submitBtn = document.getElementById('submit-guess');
+            const restartBtn = document.getElementById('restart-stage3');
+            const backBtn = document.getElementById('back-to-menu-3');
+            const input = document.getElementById('wordle-input');
+            
+            submitBtn.addEventListener('click', submitGuess);
+            restartBtn.addEventListener('click', startStage3);
+            backBtn.addEventListener('click', showMainMenu);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitGuess();
+            });
+        }
+
+        function initWordleGame() {
+            games.stage3.currentGuess = '';
+            games.stage3.guesses = [];
+            games.stage3.gameActive = true;
+            
+            // Clear board
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 5; col++) {
+                    const cell = document.getElementById(`cell-${row}-${col}`);
+                    cell.textContent = '';
+                    cell.className = 'wordle-letter w-14 h-14 border-2 border-pirate-purple-400 rounded-lg flex items-center justify-center text-2xl font-bold uppercase';
+                }
+            }
+            
+            document.getElementById('wordle-input').value = '';
+            document.getElementById('wordle-status').textContent = 'Enter a 5-letter word and press Submit';
+            document.getElementById('guesses-left').textContent = '6';
+        }
+
+        function submitGuess() {
+            if (!games.stage3.gameActive) return;
+            
+            const input = document.getElementById('wordle-input');
+            const guess = input.value.toUpperCase();
+            
+            if (guess.length !== 5) {
+                document.getElementById('wordle-status').textContent = 'Please enter exactly 5 letters';
+                return;
+            }
+            
+            if (!/^[A-Z]+$/.test(guess)) {
+                document.getElementById('wordle-status').textContent = 'Please enter only letters';
+                return;
+            }
+            
+            games.stage3.currentGuess = guess;
+            games.stage3.guesses.push(guess);
+            
+            const currentRow = games.stage3.guesses.length - 1;
+            const targetWord = games.stage3.targetWord;
+            
+            // Update board with colors
+            for (let i = 0; i < 5; i++) {
+                const cell = document.getElementById(`cell-${currentRow}-${i}`);
+                cell.textContent = guess[i];
+                
+                if (guess[i] === targetWord[i]) {
+                    cell.classList.add('bg-green-600', 'text-white', 'border-green-600');
+                } else if (targetWord.includes(guess[i])) {
+                    cell.classList.add('bg-yellow-500', 'text-white', 'border-yellow-500');
+                } else {
+                    cell.classList.add('bg-pirate-purple-600', 'text-white', 'border-pirate-purple-600');
+                }
+            }
+            
+            // Check win condition
+            if (guess === targetWord) {
+                games.stage3.gameActive = false;
+                document.getElementById('wordle-status').textContent = 'Congratulations! You guessed the word!';
+                completeStage(3);
+                return;
+            }
+            
+            // Check lose condition
+            if (games.stage3.guesses.length >= games.stage3.maxGuesses) {
+                games.stage3.gameActive = false;
+                document.getElementById('wordle-status').textContent = `Game Over! The word was "${targetWord}"`;
+                return;
+            }
+            
+            // Update UI
+            document.getElementById('guesses-left').textContent = games.stage3.maxGuesses - games.stage3.guesses.length;
+            document.getElementById('wordle-status').textContent = 'Keep guessing!';
+            input.value = '';
+            input.focus();
+        }
+
+        // Game Completion
+        function completeStage(stageNumber) {
+            gameState[`stage${stageNumber}Completed`] = true;
+            gameState.mapsFound++;
+            gameState.completedStages.push(stageNumber);
+            
+            // Show celebration
+            showCelebration(stageNumber);
+            
+            // Update UI after delay
+            setTimeout(() => {
+                updateUI();
+                showMainMenu();
+            }, 2000);
+        }
+
+        function showCelebration(stageNumber) {
+            const messages = [
+                "First map piece found! 🗺️",
+                "Second map piece acquired! 🗺️🗺️",
+                "Final map piece discovered! 🗺️🗺️🗺️"
+            ];
+            
+            const celebrationHTML = `
+                <div class="text-center py-12">
+                    <div class="animate-bounce inline-block mb-6">
+                        <i class="fas fa-trophy text-6xl text-pirate-gold"></i>
+                    </div>
+                    <h3 class="text-4xl font-pirata text-pirate-gold mb-4">Stage ${stageNumber} Complete!</h3>
+                    <p class="text-2xl mb-4">${messages[stageNumber - 1]}</p>
+                    <p class="text-xl text-pirate-purple-200">Returning to main menu...</p>
+                </div>
+            `;
+            
+            elements.gameContainer.innerHTML = celebrationHTML;
+        }
+
+        function showMainMenu() {
+            gameState.currentStage = 0;
+            updateUI();
+            
+            const mainMenuHTML = `
+                <div class="text-center py-12">
+                    <div class="animate-float inline-block mb-6">
+                        <i class="fas fa-map-marked-alt text-6xl text-pirate-gold"></i>
+                    </div>
+                    <h3 class="text-3xl font-pirata text-pirate-gold mb-4">Welcome Back, Pirate!</h3>
+                    <p class="text-xl mb-6">Continue your adventure by selecting the next stage.</p>
+                    <div class="inline-block bg-pirate-purple-700/50 p-6 rounded-xl border-2 border-pirate-gold">
+                        <p class="text-lg mb-2">Maps Found: <span class="font-bold text-pirate-gold">${gameState.mapsFound}/3</span></p>
+                        <p class="text-pirate-purple-200">Complete all stages to find the treasure!</p>
+                    </div>
+                </div>
+            `;
+            
+            elements.gameContainer.innerHTML = mainMenuHTML;
+        }
+
+        // Treasure Chest
+        function openTreasureChest() {
+            if (!gameState.stage1Completed || !gameState.stage2Completed || !gameState.stage3Completed) return;
+            
+            // Animate chest opening
+            const chestLid = document.querySelector('.chest-lid');
+            chestLid.style.animation = 'chestOpen 0.5s ease-out forwards';
+            
+            // Show prize after animation
+            setTimeout(() => {
+                elements.prizeMessage.classList.remove('hidden');
+                elements.prizeText.textContent = gameState.prizeMessage;
+                
+                // Scroll to prize
+                elements.prizeMessage.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+
+        // Prize Message Customization
+        function showPrizeModal() {
+            elements.customPrizeInput.value = gameState.prizeMessage;
+            elements.prizeModal.classList.remove('hidden');
+        }
+
+        function hidePrizeModal() {
+            elements.prizeModal.classList.add('hidden');
+        }
+
+        function savePrizeMessage() {
+            const newMessage = elements.customPrizeInput.value.trim();
+            if (newMessage) {
+                gameState.prizeMessage = newMessage;
+                elements.prizeText.textContent = newMessage;
+                hidePrizeModal();
+                
+                // Show confirmation
+                const originalText = elements.prizeText.textContent;
+                elements.prizeText.textContent = "Prize message updated successfully!";
+                setTimeout(() => {
+                    elements.prizeText.textContent = originalText;
+                }, 2000);
+            }
+        }
+
+        // Reset Game
+        function resetGame() {
+            if (confirm("Are you sure you want to reset your adventure? All progress will be lost.")) {
+                gameState.currentStage = 0;
+                gameState.completedStages = [];
+                gameState.mapsFound = 0;
+                gameState.stage1Completed = false;
+                gameState.stage2Completed = false;
+                gameState.stage3Completed = false;
+                
+                elements.treasureSection.classList.add('hidden');
+                elements.prizeMessage.classList.add('hidden');
+                
+                updateUI();
+                showMainMenu();
+            }
+        }
+
+        // Initialize the game
+        initGame();
+    </script>
+</body>
+</html>
